@@ -4,6 +4,7 @@ export type Post = {
   content: string
   createdAt: string
   likes: number
+  dislikes: number
   likedBy: string[]
   comments: number
 }

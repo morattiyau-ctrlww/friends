@@ -53,6 +53,7 @@ export default function Feed() {
         content,
         createdAt: new Date().toISOString(),
         likes: 0,
+        dislikes: 0,
         likedBy: [],
         comments: 0,
       }
@@ -114,6 +115,23 @@ export default function Feed() {
     [posts]
   )
 
+  const handleDislike = useCallback(
+    (id: string) => {
+      const next = posts.map((post) =>
+        post.id === id ? { ...post, dislikes: post.dislikes + 1 } : post
+      )
+      const updated = next.find((post) => post.id === id)
+      setPosts(next)
+      saveLocalPosts(next)
+      if (updated) {
+        upsertRemotePost(updated).catch((error) =>
+          console.error("Supabase write failed:", error)
+        )
+      }
+    },
+    [posts]
+  )
+
   const handleDeletePost = useCallback(
     (id: string) => {
       const next = posts.filter((post) => post.id !== id)
@@ -157,6 +175,7 @@ export default function Feed() {
                 post={post}
                 isOwn={post.author === currentUser}
                 onLike={() => handleLike(post.id)}
+                onDislike={() => handleDislike(post.id)}
                 onDelete={() => handleDeletePost(post.id)}
                 onUpdate={(content) => handleUpdatePost(post.id, content)}
               />

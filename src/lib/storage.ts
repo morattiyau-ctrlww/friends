@@ -11,6 +11,7 @@ type RemotePost = {
   content: string
   created_at: string
   likes: number | null
+  disliked_by: number | null
   liked_by: string[] | null
   comments: number | null
 }
@@ -85,6 +86,7 @@ function mapRemoteToLocal(row: RemotePost): Post {
     content: row.content,
     createdAt: row.created_at,
     likes: row.likes ?? 0,
+    dislikes: row.disliked_by ?? 0,
     likedBy: row.liked_by ?? [],
     comments: row.comments ?? 0,
   }
@@ -97,6 +99,7 @@ function mapLocalToRemote(post: Post) {
     content: post.content,
     created_at: post.createdAt,
     likes: post.likes,
+    disliked_by: post.dislikes,
     liked_by: post.likedBy,
     comments: post.comments,
   }

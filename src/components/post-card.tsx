@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Heart, MessageCircle, Pencil, Trash2 } from "lucide-react"
+import { Heart, MessageCircle, Pencil, ThumbsDown, Trash2 } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,7 @@ type PostCardProps = {
   post: Post
   isOwn: boolean
   onLike: () => void
+  onDislike: () => void
   onDelete: () => void
   onUpdate: (content: string) => void
 }
@@ -31,6 +32,7 @@ export default function PostCard({
   post,
   isOwn,
   onLike,
+  onDislike,
   onDelete,
   onUpdate,
 }: PostCardProps) {
@@ -81,6 +83,16 @@ export default function PostCard({
         >
           <Heart className="size-4" />
           <span className="text-xs font-medium tabular-nums">{post.likes}</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onDislike}
+          className="gap-1.5 rounded-full"
+          aria-label="Dislike post"
+        >
+          <ThumbsDown className="size-4" />
+          <span className="text-xs font-medium tabular-nums">{post.dislikes}</span>
         </Button>
         <Button
           variant="ghost"
