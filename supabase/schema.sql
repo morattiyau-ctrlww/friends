@@ -13,6 +13,11 @@ create table if not exists public.posts (
 
 alter table public.posts enable row level security;
 
+drop policy if exists "posts_select_policy" on public.posts;
+drop policy if exists "posts_insert_policy" on public.posts;
+drop policy if exists "posts_update_policy" on public.posts;
+drop policy if exists "posts_delete_policy" on public.posts;
+
 create policy "posts_select_policy" on public.posts for select using (true);
 create policy "posts_insert_policy" on public.posts for insert with check (true);
 create policy "posts_update_policy" on public.posts for update using (true);
