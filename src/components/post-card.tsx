@@ -18,12 +18,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { formatRelativeTime } from "@/lib/format-time"
 import { getFriend, getInitials } from "@/lib/friends"
 import type { Post } from "@/lib/types"
-import { cn } from "@/lib/utils"
 
 type PostCardProps = {
   post: Post
   isOwn: boolean
-  isLiked: boolean
   onLike: () => void
   onDelete: () => void
   onUpdate: (content: string) => void
@@ -32,7 +30,6 @@ type PostCardProps = {
 export default function PostCard({
   post,
   isOwn,
-  isLiked,
   onLike,
   onDelete,
   onUpdate,
@@ -79,15 +76,10 @@ export default function PostCard({
           variant="ghost"
           size="sm"
           onClick={onLike}
-          className={cn(
-            "gap-1.5 rounded-full",
-            isLiked && "text-rose-600 hover:text-rose-600"
-          )}
-          aria-label={isLiked ? "Unlike post" : "Like post"}
+          className="gap-1.5 rounded-full"
+          aria-label="Like post"
         >
-          <Heart
-            className={cn("size-4", isLiked && "fill-rose-600")}
-          />
+          <Heart className="size-4" />
           <span className="text-xs font-medium tabular-nums">{post.likes}</span>
         </Button>
         <Button

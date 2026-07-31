@@ -97,19 +97,11 @@ export default function Feed() {
     [posts]
   )
 
-  const handleToggleLike = useCallback(
+  const handleLike = useCallback(
     (id: string) => {
-      const next = posts.map((post) => {
-        if (post.id !== id) return post
-        const liked = post.likedBy.includes(currentUser)
-        return {
-          ...post,
-          likes: post.likes + (liked ? -1 : 1),
-          likedBy: liked
-            ? post.likedBy.filter((user) => user !== currentUser)
-            : [...post.likedBy, currentUser],
-        }
-      })
+      const next = posts.map((post) =>
+        post.id === id ? { ...post, likes: post.likes + 1 } : post
+      )
       const updated = next.find((post) => post.id === id)
       setPosts(next)
       saveLocalPosts(next)
@@ -119,7 +111,7 @@ export default function Feed() {
         )
       }
     },
-    [posts, currentUser]
+    [posts]
   )
 
   const handleDeletePost = useCallback(
@@ -164,8 +156,7 @@ export default function Feed() {
                 key={post.id}
                 post={post}
                 isOwn={post.author === currentUser}
-                isLiked={post.likedBy.includes(currentUser)}
-                onLike={() => handleToggleLike(post.id)}
+                onLike={() => handleLike(post.id)}
                 onDelete={() => handleDeletePost(post.id)}
                 onUpdate={(content) => handleUpdatePost(post.id, content)}
               />
