@@ -12,14 +12,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { FRIENDS, getFriend, getInitials } from "@/lib/friends"
+import { getFriend, getInitials } from "@/lib/friends"
 
 type HeaderProps = {
   currentUser: string
+  users: string[]
   onSwitchUser: (name: string) => void
 }
 
-export default function Header({ currentUser, onSwitchUser }: HeaderProps) {
+export default function Header({ currentUser, users, onSwitchUser }: HeaderProps) {
   const currentFriend = getFriend(currentUser)
 
   return (
@@ -55,30 +56,35 @@ export default function Header({ currentUser, onSwitchUser }: HeaderProps) {
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuLabel>Switch user</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {FRIENDS.map((friend) => (
-              <DropdownMenuItem
-                key={friend.name}
-                onSelect={() => onSwitchUser(friend.name)}
-                className="gap-2.5"
-              >
-                <Avatar className="size-6">
-                  <AvatarFallback
-                    className={`${friend.avatarColor} text-xs text-white`}
-                  >
-                    {getInitials(friend.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="flex flex-col">
-                  <span className="text-sm">{friend.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {friend.tagline}
+            {users.map((name) => {
+              const friend = getFriend(name)
+              return (
+                <DropdownMenuItem
+                  key={name}
+                  onSelect={() => onSwitchUser(name)}
+                  className="gap-2.5"
+                >
+                  <Avatar className="size-6">
+                    <AvatarFallback
+                      className={`${friend.avatarColor} text-xs text-white`}
+                    >
+                      {getInitials(name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="flex flex-col">
+                    <span className="text-sm">{name}</span>
+                    {friend.tagline !== "Friend" && (
+                      <span className="text-xs text-muted-foreground">
+                        {friend.tagline}
+                      </span>
+                    )}
                   </span>
-                </span>
-                {currentUser === friend.name && (
-                  <Check className="ml-auto size-4 text-primary" />
-                )}
-              </DropdownMenuItem>
-            ))}
+                  {currentUser === name && (
+                    <Check className="ml-auto size-4 text-primary" />
+                  )}
+                </DropdownMenuItem>
+              )
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

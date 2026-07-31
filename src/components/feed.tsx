@@ -1,17 +1,20 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { MessageCircle } from "lucide-react"
 
 import CreatePost from "@/components/create-post"
 import Header from "@/components/header"
 import PostCard from "@/components/post-card"
+import { FRIENDS } from "@/lib/friends"
 import {
   deleteRemotePost,
   fetchRemotePosts,
   loadCurrentUser,
+  loadExtraUsers,
   loadLocalPosts,
   saveCurrentUser,
+  saveExtraUsers,
   saveLocalPosts,
   upsertRemotePost,
 } from "@/lib/storage"
@@ -20,6 +23,7 @@ import type { Post } from "@/lib/types"
 export default function Feed() {
   const [currentUser, setCurrentUser] = useState<string>(() => loadCurrentUser())
   const [posts, setPosts] = useState<Post[]>(() => loadLocalPosts())
+  const [extraUsers, setExtraUsers] = useState<string[]>(() => loadExtraUsers())
 
   useEffect(() => {
     fetchRemotePosts()
@@ -42,10 +46,10 @@ export default function Feed() {
   }, [])
 
   const handleCreatePost = useCallback(
-    (content: string) => {
+    (content: string, author: string) => {
       const post: Post = {
         id: crypto.randomUUID(),
-        author: currentUser,
+        author,
         content,
         createdAt: new Date().toISOString(),
         likes: 0,
@@ -60,6 +64,18 @@ export default function Feed() {
       upsertRemotePost(post).catch((error) =>
         console.error("Supabase write failed:", error)
       )
+      if (!FRIENDS.some((friend) => friend.name === author)) {
+        setExtraUsers((prev) => {
+          if (prev.includes(author)) return prev
+          const next = [...prev, author]
+          saveExtraUsers(next)
+          return next
+        })
+      }
+      if (author !== currentUser) {
+        setCurrentUser(author)
+        saveCurrentUser(author)
+      }
     },
     [currentUser]
   )
@@ -123,9 +139,14 @@ export default function Feed() {
     saveCurrentUser(name)
   }, [])
 
+  const users = useMemo(
+    () => [...FRIENDS.map((friend) => friend.name), ...extraUsers],
+    [extraUsers]
+  )
+
   return (
     <div className="min-h-dvh bg-muted/60">
-      <Header currentUser={currentUser} onSwitchUser={handleSwitchUser} />
+      <Header currentUser={currentUser} users={users} onSwitchUser={handleSwitchUser} />
       <main className="mx-auto w-full max-w-2xl space-y-4 px-4 py-6">
         <CreatePost currentUser={currentUser} onPost={handleCreatePost} />
 

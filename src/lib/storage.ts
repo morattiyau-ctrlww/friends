@@ -3,6 +3,7 @@ import type { Post } from "./types"
 
 const POSTS_KEY = "friend-feed:posts:v2"
 const CURRENT_USER_KEY = "friend-feed:current-user"
+const EXTRA_USERS_KEY = "friend-feed:extra-users:v1"
 
 type RemotePost = {
   id: string
@@ -39,6 +40,23 @@ export function loadCurrentUser(): string {
 export function saveCurrentUser(name: string): void {
   if (typeof window === "undefined") return
   window.localStorage.setItem(CURRENT_USER_KEY, name)
+}
+
+export function loadExtraUsers(): string[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = window.localStorage.getItem(EXTRA_USERS_KEY)
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    return Array.isArray(parsed) ? (parsed as string[]) : []
+  } catch {
+    return []
+  }
+}
+
+export function saveExtraUsers(users: string[]): void {
+  if (typeof window === "undefined") return
+  window.localStorage.setItem(EXTRA_USERS_KEY, JSON.stringify(users))
 }
 
 export async function fetchRemotePosts(): Promise<Post[]> {
