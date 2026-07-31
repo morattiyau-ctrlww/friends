@@ -1,7 +1,7 @@
 import { supabase } from "./supabase"
 import type { Post } from "./types"
 
-const POSTS_KEY = "friend-feed:posts"
+const POSTS_KEY = "friend-feed:posts:v2"
 const CURRENT_USER_KEY = "friend-feed:current-user"
 
 type RemotePost = {

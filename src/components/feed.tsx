@@ -17,65 +17,20 @@ import {
 } from "@/lib/storage"
 import type { Post } from "@/lib/types"
 
-function createSeedPosts(): Post[] {
-  const now = Date.now()
-  const hoursAgo = (hours: number) =>
-    new Date(now - hours * 60 * 60 * 1000).toISOString()
-
-  return [
-    {
-      id: crypto.randomUUID(),
-      author: "Alex",
-      content:
-        "Just wrapped up a great run in the park. The weather this morning was perfect.",
-      createdAt: hoursAgo(2),
-      likes: 3,
-      likedBy: ["Sam"],
-      comments: 0,
-    },
-    {
-      id: crypto.randomUUID(),
-      author: "Taylor",
-      content:
-        "Adopted a kitten this weekend. Meet Miso - she is already running the place.",
-      createdAt: hoursAgo(6),
-      likes: 5,
-      likedBy: ["Alex", "Sam"],
-      comments: 1,
-    },
-    {
-      id: crypto.randomUUID(),
-      author: "Sam",
-      content:
-        "Anyone up for a hike on Saturday? Planning to hit the Ridge Trail early morning.",
-      createdAt: hoursAgo(26),
-      likes: 4,
-      likedBy: ["Alex", "Taylor"],
-      comments: 2,
-    },
-  ]
-}
-
 export default function Feed() {
   const [currentUser, setCurrentUser] = useState<string>(() => loadCurrentUser())
-  const [posts, setPosts] = useState<Post[]>(() => {
-    let local = loadLocalPosts()
-    if (local.length === 0) {
-      local = createSeedPosts()
-      saveLocalPosts(local)
-    }
-    return local
-  })
+  const [posts, setPosts] = useState<Post[]>(() => loadLocalPosts())
 
   useEffect(() => {
     fetchRemotePosts()
       .then((remote) => {
         setPosts((prev) => {
           const remoteIds = new Set(remote.map((post) => post.id))
-          const merged = [
-            ...remote,
-            ...prev.filter((post) => !remoteIds.has(post.id)),
-          ]
+          const localOnly = prev.filter((post) => !remoteIds.has(post.id))
+          for (const post of localOnly) {
+            upsertRemotePost(post).catch(() => {})
+          }
+          const merged = [...remote, ...localOnly]
           merged.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
           saveLocalPosts(merged)
           return merged
