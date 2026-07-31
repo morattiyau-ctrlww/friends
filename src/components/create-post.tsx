@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Send } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -15,17 +15,32 @@ type CreatePostProps = {
   onPost: (content: string, author: string, imageUrl?: string) => void
 }
 
+function isValidUrl(value: string) {
+  try {
+    new URL(value)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
   const [author, setAuthor] = useState(currentUser)
   const [content, setContent] = useState("")
   const [imageUrl, setImageUrl] = useState("")
   const finalAuthor = author.trim() || currentUser
   const friend = getFriend(finalAuthor)
-  const canPost = content.trim().length > 0
+  const imageUrlTrimmed = imageUrl.trim()
+  const imageUrlValid = imageUrlTrimmed === "" || isValidUrl(imageUrlTrimmed)
+  const canPost = content.trim().length > 0 && imageUrlValid
+  const imagePreviewUrl = useMemo(
+    () => (imageUrlValid && imageUrlTrimmed ? imageUrlTrimmed : undefined),
+    [imageUrlTrimmed, imageUrlValid]
+  )
 
   const handlePost = () => {
     if (!canPost) return
-    onPost(content.trim(), finalAuthor, imageUrl.trim() || undefined)
+    onPost(content.trim(), finalAuthor, imageUrlTrimmed || undefined)
     setContent("")
     setImageUrl("")
   }
@@ -53,6 +68,20 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
             className="h-8"
             aria-label="Photo URL"
           />
+          {!imageUrlValid && (
+            <p className="text-xs text-destructive">
+              Enter a valid URL or leave this field blank.
+            </p>
+          )}
+          {imagePreviewUrl ? (
+            <div className="overflow-hidden rounded-xl border border-border bg-background">
+              <img
+                src={imagePreviewUrl}
+                alt="Preview"
+                className="h-40 w-full object-cover"
+              />
+            </div>
+          ) : null}
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
