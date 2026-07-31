@@ -46,7 +46,7 @@ export default function Feed() {
   }, [])
 
   const handleCreatePost = useCallback(
-    (content: string, author: string) => {
+    (content: string, author: string, imageUrl?: string) => {
       const post: Post = {
         id: crypto.randomUUID(),
         author,
@@ -56,6 +56,8 @@ export default function Feed() {
         dislikes: 0,
         likedBy: [],
         comments: 0,
+        replies: [],
+        imageUrl,
       }
       setPosts((prev) => {
         const next = [post, ...prev]
@@ -132,6 +134,37 @@ export default function Feed() {
     [posts]
   )
 
+  const handleReply = useCallback(
+    (id: string, content: string) => {
+      const next = posts.map((post) =>
+        post.id === id
+          ? {
+              ...post,
+              replies: [
+                ...post.replies,
+                {
+                  id: crypto.randomUUID(),
+                  author: currentUser,
+                  content,
+                  createdAt: new Date().toISOString(),
+                },
+              ],
+              comments: post.comments + 1,
+            }
+          : post
+      )
+      const updated = next.find((post) => post.id === id)
+      setPosts(next)
+      saveLocalPosts(next)
+      if (updated) {
+        upsertRemotePost(updated).catch((error) =>
+          console.error("Supabase write failed:", error)
+        )
+      }
+    },
+    [currentUser, posts]
+  )
+
   const handleDeletePost = useCallback(
     (id: string) => {
       const next = posts.filter((post) => post.id !== id)
@@ -178,6 +211,7 @@ export default function Feed() {
                 onDislike={() => handleDislike(post.id)}
                 onDelete={() => handleDeletePost(post.id)}
                 onUpdate={(content) => handleUpdatePost(post.id, content)}
+                onReply={(content) => handleReply(post.id, content)}
               />
             ))}
           </div>

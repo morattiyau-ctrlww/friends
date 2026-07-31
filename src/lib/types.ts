@@ -1,3 +1,10 @@
+export type Reply = {
+  id: string
+  author: string
+  content: string
+  createdAt: string
+}
+
 export type Post = {
   id: string
   author: string
@@ -7,4 +14,6 @@ export type Post = {
   dislikes: number
   likedBy: string[]
   comments: number
+  replies: Reply[]
+  imageUrl?: string
 }

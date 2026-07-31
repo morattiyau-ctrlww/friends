@@ -12,20 +12,22 @@ import { getFriend, getInitials } from "@/lib/friends"
 
 type CreatePostProps = {
   currentUser: string
-  onPost: (content: string, author: string) => void
+  onPost: (content: string, author: string, imageUrl?: string) => void
 }
 
 export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
   const [author, setAuthor] = useState(currentUser)
   const [content, setContent] = useState("")
+  const [imageUrl, setImageUrl] = useState("")
   const finalAuthor = author.trim() || currentUser
   const friend = getFriend(finalAuthor)
   const canPost = content.trim().length > 0
 
   const handlePost = () => {
     if (!canPost) return
-    onPost(content.trim(), finalAuthor)
+    onPost(content.trim(), finalAuthor, imageUrl.trim() || undefined)
     setContent("")
+    setImageUrl("")
   }
 
   return (
@@ -43,6 +45,13 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
             placeholder="Your name"
             className="h-8 max-w-[220px]"
             aria-label="Author name"
+          />
+          <Input
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="Photo URL (optional)"
+            className="h-8"
+            aria-label="Photo URL"
           />
           <Textarea
             value={content}

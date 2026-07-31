@@ -24,6 +24,7 @@ type PostCardProps = {
   isOwn: boolean
   onLike: () => void
   onDislike: () => void
+  onReply: (content: string) => void
   onDelete: () => void
   onUpdate: (content: string) => void
 }
@@ -33,12 +34,14 @@ export default function PostCard({
   isOwn,
   onLike,
   onDislike,
+  onReply,
   onDelete,
   onUpdate,
 }: PostCardProps) {
   const friend = getFriend(post.author)
   const [editOpen, setEditOpen] = useState(false)
   const [draft, setDraft] = useState(post.content)
+  const [replyDraft, setReplyDraft] = useState("")
 
   const openEdit = () => {
     setDraft(post.content)
@@ -50,6 +53,13 @@ export default function PostCard({
     if (!trimmed) return
     onUpdate(trimmed)
     setEditOpen(false)
+  }
+
+  const handleReply = () => {
+    const trimmed = replyDraft.trim()
+    if (!trimmed) return
+    onReply(trimmed)
+    setReplyDraft("")
   }
 
   return (
@@ -70,6 +80,13 @@ export default function PostCard({
           <p className="mt-1.5 text-sm leading-relaxed whitespace-pre-wrap">
             {post.content}
           </p>
+          {post.imageUrl ? (
+            <img
+              src={post.imageUrl}
+              alt="Posted image"
+              className="mt-3 w-full rounded-xl border border-border object-cover"
+            />
+          ) : null}
         </div>
       </div>
 
@@ -88,11 +105,12 @@ export default function PostCard({
           variant="ghost"
           size="sm"
           onClick={onDislike}
-          className="gap-1.5 rounded-full"
+          className="gap-1.5 rounded-full border border-destructive/20 bg-destructive/5 text-destructive hover:bg-destructive/10"
           aria-label="Dislike post"
+          title="Dislike post"
         >
           <ThumbsDown className="size-4" />
-          <span className="text-xs font-medium tabular-nums">{post.dislikes}</span>
+          <span className="text-xs font-medium tabular-nums">Dislike {post.dislikes}</span>
         </Button>
         <Button
           variant="ghost"
@@ -128,6 +146,54 @@ export default function PostCard({
             </Button>
           </div>
         )}
+      </div>
+
+      <div className="mt-4 space-y-3 rounded-xl bg-muted/50 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold">Replies</span>
+          <span className="text-xs text-muted-foreground">
+            {post.replies.length}
+          </span>
+        </div>
+
+        {post.replies.length > 0 ? (
+          <div className="space-y-3">
+            {post.replies.map((reply) => (
+              <div key={reply.id} className="rounded-xl border border-border bg-background p-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">{reply.author}</span>
+                  <span>{formatRelativeTime(reply.createdAt)}</span>
+                </div>
+                <p className="mt-1 text-sm leading-relaxed whitespace-pre-wrap">
+                  {reply.content}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">No replies yet.</p>
+        )}
+
+        <div className="space-y-2">
+          <Textarea
+            value={replyDraft}
+            onChange={(e) => setReplyDraft(e.target.value)}
+            placeholder="Write a reply…"
+            className="min-h-20 resize-none"
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                handleReply()
+              }
+            }}
+          />
+          <Button
+            onClick={handleReply}
+            disabled={!replyDraft.trim()}
+            className="gap-1.5 rounded-full px-5"
+          >
+            Reply
+          </Button>
+        </div>
       </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>

@@ -1,5 +1,5 @@
 import { supabase } from "./supabase"
-import type { Post } from "./types"
+import type { Post, Reply } from "./types"
 
 const POSTS_KEY = "friend-feed:posts:v2"
 const CURRENT_USER_KEY = "friend-feed:current-user"
@@ -11,9 +11,11 @@ type RemotePost = {
   content: string
   created_at: string
   likes: number | null
-  disliked_by: number | null
+  dislikes: number | null
   liked_by: string[] | null
   comments: number | null
+  image_url: string | null
+  replies: Reply[] | null
 }
 
 export function loadLocalPosts(): Post[] {
@@ -22,7 +24,13 @@ export function loadLocalPosts(): Post[] {
     const raw = window.localStorage.getItem(POSTS_KEY)
     if (!raw) return []
     const parsed: unknown = JSON.parse(raw)
-    return Array.isArray(parsed) ? (parsed as Post[]) : []
+    if (!Array.isArray(parsed)) return []
+    return (parsed as Post[]).map((post) => ({
+      ...post,
+      replies: post.replies ?? [],
+      comments: post.comments ?? post.replies?.length ?? 0,
+      imageUrl: post.imageUrl ?? undefined,
+    }))
   } catch {
     return []
   }
@@ -80,15 +88,18 @@ export async function deleteRemotePost(id: string): Promise<void> {
 }
 
 function mapRemoteToLocal(row: RemotePost): Post {
+  const replies = row.replies ?? []
   return {
     id: row.id,
     author: row.author,
     content: row.content,
     createdAt: row.created_at,
     likes: row.likes ?? 0,
-    dislikes: row.disliked_by ?? 0,
+    dislikes: row.dislikes ?? 0,
     likedBy: row.liked_by ?? [],
-    comments: row.comments ?? 0,
+    replies,
+    comments: row.comments ?? replies.length,
+    imageUrl: row.image_url ?? undefined,
   }
 }
 
@@ -99,8 +110,10 @@ function mapLocalToRemote(post: Post) {
     content: post.content,
     created_at: post.createdAt,
     likes: post.likes,
-    disliked_by: post.dislikes,
+    dislikes: post.dislikes,
     liked_by: post.likedBy,
-    comments: post.comments,
+    comments: post.replies.length,
+    image_url: post.imageUrl ?? null,
+    replies: post.replies,
   }
 }
