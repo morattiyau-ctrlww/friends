@@ -23,9 +23,10 @@ import type { Post } from "@/lib/types"
 type PostCardProps = {
   post: Post
   isOwn: boolean
+  currentUser: string
   onLike: () => void
   onDislike: () => void
-  onReply: (content: string) => void
+  onReply: (content: string, author: string) => void
   onDelete: () => void
   onUpdate: (content: string, imageUrl?: string) => void
 }
@@ -42,6 +43,7 @@ function isValidUrl(value: string) {
 export default function PostCard({
   post,
   isOwn,
+  currentUser,
   onLike,
   onDislike,
   onReply,
@@ -53,6 +55,7 @@ export default function PostCard({
   const [draft, setDraft] = useState(post.content)
   const [imageUrlDraft, setImageUrlDraft] = useState(post.imageUrl ?? "")
   const [replyDraft, setReplyDraft] = useState("")
+  const [replyAuthor, setReplyAuthor] = useState(currentUser)
 
   const imageUrlTrimmed = imageUrlDraft.trim()
   const imageUrlValid = imageUrlTrimmed === "" || isValidUrl(imageUrlTrimmed)
@@ -73,7 +76,7 @@ export default function PostCard({
   const handleReply = () => {
     const trimmed = replyDraft.trim()
     if (!trimmed) return
-    onReply(trimmed)
+    onReply(trimmed, replyAuthor.trim() || currentUser)
     setReplyDraft("")
   }
 
@@ -193,6 +196,13 @@ export default function PostCard({
         )}
 
         <div className="space-y-2">
+          <Input
+            value={replyAuthor}
+            onChange={(e) => setReplyAuthor(e.target.value)}
+            placeholder="Reply as…"
+            className="h-8"
+            aria-label="Reply author name"
+          />
           <Textarea
             value={replyDraft}
             onChange={(e) => setReplyDraft(e.target.value)}

@@ -137,7 +137,7 @@ export default function Feed() {
   )
 
   const handleReply = useCallback(
-    (id: string, content: string) => {
+    (id: string, content: string, author: string) => {
       const next = posts.map((post) =>
         post.id === id
           ? {
@@ -146,7 +146,7 @@ export default function Feed() {
                 ...post.replies,
                 {
                   id: crypto.randomUUID(),
-                  author: currentUser,
+                  author,
                   content,
                   createdAt: new Date().toISOString(),
                 },
@@ -163,8 +163,16 @@ export default function Feed() {
           console.error("Supabase write failed:", error)
         )
       }
+      if (!FRIENDS.some((friend) => friend.name === author)) {
+        setExtraUsers((prev) => {
+          if (prev.includes(author)) return prev
+          const next = [...prev, author]
+          saveExtraUsers(next)
+          return next
+        })
+      }
     },
-    [currentUser, posts]
+    [posts]
   )
 
   const handleDeletePost = useCallback(
@@ -209,13 +217,16 @@ export default function Feed() {
                 key={post.id}
                 post={post}
                 isOwn={post.author === currentUser}
+                currentUser={currentUser}
                 onLike={() => handleLike(post.id)}
                 onDislike={() => handleDislike(post.id)}
                 onDelete={() => handleDeletePost(post.id)}
                 onUpdate={(content, imageUrl) =>
                   handleUpdatePost(post.id, content, imageUrl)
                 }
-                onReply={(content) => handleReply(post.id, content)}
+                onReply={(content, author) =>
+                  handleReply(post.id, content, author)
+                }
               />
             ))}
           </div>
