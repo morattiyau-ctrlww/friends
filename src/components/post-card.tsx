@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { formatRelativeTime } from "@/lib/format-time"
 import { getFriend, getInitials } from "@/lib/friends"
@@ -26,7 +27,16 @@ type PostCardProps = {
   onDislike: () => void
   onReply: (content: string) => void
   onDelete: () => void
-  onUpdate: (content: string) => void
+  onUpdate: (content: string, imageUrl?: string) => void
+}
+
+function isValidUrl(value: string) {
+  try {
+    new URL(value)
+    return true
+  } catch {
+    return false
+  }
 }
 
 export default function PostCard({
@@ -41,17 +51,22 @@ export default function PostCard({
   const friend = getFriend(post.author)
   const [editOpen, setEditOpen] = useState(false)
   const [draft, setDraft] = useState(post.content)
+  const [imageUrlDraft, setImageUrlDraft] = useState(post.imageUrl ?? "")
   const [replyDraft, setReplyDraft] = useState("")
+
+  const imageUrlTrimmed = imageUrlDraft.trim()
+  const imageUrlValid = imageUrlTrimmed === "" || isValidUrl(imageUrlTrimmed)
 
   const openEdit = () => {
     setDraft(post.content)
+    setImageUrlDraft(post.imageUrl ?? "")
     setEditOpen(true)
   }
 
   const handleSave = () => {
     const trimmed = draft.trim()
-    if (!trimmed) return
-    onUpdate(trimmed)
+    if (!trimmed || !imageUrlValid) return
+    onUpdate(trimmed, imageUrlTrimmed || undefined)
     setEditOpen(false)
   }
 
@@ -85,6 +100,9 @@ export default function PostCard({
               src={post.imageUrl}
               alt="Posted image"
               className="mt-3 w-full rounded-xl border border-border object-cover"
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).style.display = "none"
+              }}
             />
           ) : null}
         </div>
@@ -201,19 +219,33 @@ export default function PostCard({
           <DialogHeader>
             <DialogTitle>Edit post</DialogTitle>
             <DialogDescription>
-              Update the text of your post.
+              Update the text and image of your post.
             </DialogDescription>
           </DialogHeader>
-          <Textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            className="min-h-28 resize-none"
-          />
+          <div className="space-y-3">
+            <Input
+              value={imageUrlDraft}
+              onChange={(e) => setImageUrlDraft(e.target.value)}
+              placeholder="Image URL (optional)"
+              type="url"
+              aria-label="Image URL"
+            />
+            {!imageUrlValid && (
+              <p className="text-xs text-destructive">
+                Enter a valid URL or leave this field blank.
+              </p>
+            )}
+            <Textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              className="min-h-28 resize-none"
+            />
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={!draft.trim()}>
+            <Button onClick={handleSave} disabled={!draft.trim() || !imageUrlValid}>
               Save changes
             </Button>
           </DialogFooter>

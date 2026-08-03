@@ -84,9 +84,11 @@ export default function Feed() {
   )
 
   const handleUpdatePost = useCallback(
-    (id: string, content: string) => {
+    (id: string, content: string, imageUrl?: string) => {
       const next = posts.map((post) =>
-        post.id === id ? { ...post, content } : post
+        post.id === id
+          ? { ...post, content, imageUrl: imageUrl || undefined }
+          : post
       )
       const updated = next.find((post) => post.id === id)
       setPosts(next)
@@ -210,7 +212,9 @@ export default function Feed() {
                 onLike={() => handleLike(post.id)}
                 onDislike={() => handleDislike(post.id)}
                 onDelete={() => handleDeletePost(post.id)}
-                onUpdate={(content) => handleUpdatePost(post.id, content)}
+                onUpdate={(content, imageUrl) =>
+                  handleUpdatePost(post.id, content, imageUrl)
+                }
                 onReply={(content) => handleReply(post.id, content)}
               />
             ))}
