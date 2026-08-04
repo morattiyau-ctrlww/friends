@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type MouseEvent } from "react"
 import {
   ChevronDown,
   ChevronUp,
@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { formatRelativeTime } from "@/lib/format-time"
 import { getFriend, getInitials } from "@/lib/friends"
+import { emitReaction } from "@/lib/reactions"
 import { cn } from "@/lib/utils"
 import type { Post } from "@/lib/types"
 
@@ -92,6 +93,20 @@ export default function PostCard({
 
   const toggleReplies = () => setRepliesOpen((value) => !value)
 
+  const handleReaction = (
+    e: MouseEvent<HTMLButtonElement>,
+    type: "like" | "dislike"
+  ) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    emitReaction(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+      type
+    )
+    if (type === "like") onLike()
+    else onDislike()
+  }
+
   const replyCount = post.replies.length
   const replyToggleLabel = repliesOpen
     ? replyCount > 0
@@ -151,7 +166,7 @@ export default function PostCard({
         <Button
           variant="ghost"
           size="sm"
-          onClick={onLike}
+          onClick={(e) => handleReaction(e, "like")}
           className="gap-1.5 rounded-full transition-transform active:scale-90"
           aria-label="Like post"
         >
@@ -161,7 +176,7 @@ export default function PostCard({
         <Button
           variant="ghost"
           size="sm"
-          onClick={onDislike}
+          onClick={(e) => handleReaction(e, "dislike")}
           className="gap-1.5 rounded-full border border-destructive/20 bg-destructive/5 text-destructive transition-transform hover:bg-destructive/10 active:scale-90"
           aria-label="Dislike post"
           title="Dislike post"

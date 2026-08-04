@@ -1,6 +1,10 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import {
+  REACTION_EVENT,
+  type ReactionEventDetail,
+} from "@/lib/reactions"
 
 type Star = {
   x: number
@@ -23,6 +27,20 @@ type Nebula = {
   alpha: number
 }
 
+type ReactionParticle = {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  size: number
+  hue: number
+  life: number
+  duration: number
+  swayAmp: number
+  swayFreq: number
+  swayPhase: number
+}
+
 export default function BackgroundCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
@@ -41,6 +59,8 @@ export default function BackgroundCanvas() {
 
     let stars: Star[] = []
     let nebulae: Nebula[] = []
+    const reactions: ReactionParticle[] = []
+    let lastT = performance.now()
 
     const init = () => {
       const count = Math.min(220, Math.max(90, Math.floor((width * height) / 6500)))
@@ -77,8 +97,36 @@ export default function BackgroundCanvas() {
     }
     resize()
 
+    const spawnReactions = (detail: ReactionEventDetail) => {
+      if (reduced) return
+      const hue = detail.type === "like" ? 320 : 195
+      const count = 10 + Math.floor(Math.random() * 5)
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2
+        const speed = Math.random() * 1.2 + 0.4
+        reactions.push({
+          x: detail.x + (Math.random() - 0.5) * 8,
+          y: detail.y + (Math.random() - 0.5) * 8,
+          vx: Math.cos(angle) * speed,
+          vy: -(Math.random() * 1.4 + 0.6),
+          size: Math.random() * 3 + 1.5,
+          hue: hue + (Math.random() * 20 - 10),
+          life: 0,
+          duration: Math.random() * 0.5 + 0.9,
+          swayAmp: Math.random() * 0.5 + 0.2,
+          swayFreq: Math.random() * 2 + 1,
+          swayPhase: Math.random() * Math.PI * 2,
+        })
+      }
+      if (reactions.length > 150) {
+        reactions.splice(0, reactions.length - 150)
+      }
+    }
+
     const draw = (t: number) => {
       const time = t / 1000
+      const dt = Math.min((t - lastT) / 1000, 0.05)
+      lastT = t
       ctx.clearRect(0, 0, width, height)
 
       for (const nebula of nebulae) {
@@ -142,6 +190,25 @@ export default function BackgroundCanvas() {
         ctx.fill()
       }
 
+      for (let i = reactions.length - 1; i >= 0; i--) {
+        const p = reactions[i]
+        p.life += dt
+        if (p.life >= p.duration) {
+          reactions.splice(i, 1)
+          continue
+        }
+        const progress = p.life / p.duration
+        const fade = 1 - progress
+        p.x += p.vx * dt + Math.sin(time * p.swayFreq + p.swayPhase) * p.swayAmp * dt
+        p.y += p.vy * dt
+        const glowR = p.size * (3 + 4 * fade)
+        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, glowR)
+        gradient.addColorStop(0, `hsla(${p.hue} 90% 70% / ${0.9 * fade})`)
+        gradient.addColorStop(1, `hsla(${p.hue} 90% 70% / 0)`)
+        ctx.fillStyle = gradient
+        ctx.fillRect(p.x - glowR, p.y - glowR, glowR * 2, glowR * 2)
+      }
+
       if (!reduced) raf = requestAnimationFrame(draw)
     }
 
@@ -150,8 +217,13 @@ export default function BackgroundCanvas() {
       mouse.y = e.clientY
     }
 
+    const onReaction = (e: Event) => {
+      spawnReactions((e as CustomEvent<ReactionEventDetail>).detail)
+    }
+
     window.addEventListener("resize", resize)
     window.addEventListener("pointermove", onPointerMove, { passive: true })
+    window.addEventListener(REACTION_EVENT, onReaction)
 
     raf = requestAnimationFrame(draw)
 
@@ -159,6 +231,7 @@ export default function BackgroundCanvas() {
       cancelAnimationFrame(raf)
       window.removeEventListener("resize", resize)
       window.removeEventListener("pointermove", onPointerMove)
+      window.removeEventListener(REACTION_EVENT, onReaction)
     }
   }, [])
 
