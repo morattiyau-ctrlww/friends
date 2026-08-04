@@ -207,7 +207,7 @@ export default function Feed() {
 
         {posts.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-16 text-center animate-fade-up">
-            <div className="flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/15 to-fuchsia-500/15 text-indigo-500 ring-1 ring-inset ring-indigo-500/20 dark:text-indigo-300">
+            <div className="flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 text-purple-400 ring-1 ring-inset ring-purple-400/30">
               <MessageCircle className="size-6" />
             </div>
             <p className="text-sm font-semibold">No posts yet.</p>

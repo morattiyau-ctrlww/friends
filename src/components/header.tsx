@@ -24,10 +24,10 @@ export default function Header({ currentUser, users, onSwitchUser }: HeaderProps
   const currentFriend = getFriend(currentUser)
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a0c16]/70 backdrop-blur-lg">
       <div className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <div className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white shadow-sm">
+          <div className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 text-white shadow-sm">
             <Users className="size-4" />
           </div>
           <span className="font-heading text-lg font-semibold tracking-tight">

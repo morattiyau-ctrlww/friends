@@ -102,8 +102,8 @@ export default function PostCard({
       : "Show comments"
 
   return (
-    <Card className="group gap-0 p-0 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-glow hover:ring-indigo-500/25">
-      <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 opacity-80" />
+    <Card className="group gap-0 p-0 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-purple-400/40 hover:shadow-glow">
+      <div className="h-0.5 w-full bg-gradient-to-r from-purple-500 via-fuchsia-500 to-cyan-400 opacity-90" />
 
       <div className="flex items-start gap-3 p-4 pb-2">
         <Avatar className="size-11 ring-2 ring-background dark:ring-white/10">
@@ -121,7 +121,7 @@ export default function PostCard({
             <span className="text-sm font-semibold tracking-tight">
               {post.author}
             </span>
-            <span className="rounded-full bg-gradient-to-r from-indigo-500/10 via-violet-500/10 to-fuchsia-500/10 px-2 py-0.5 text-[11px] font-medium text-indigo-600 ring-1 ring-inset ring-indigo-500/20 dark:text-indigo-300 dark:ring-indigo-400/20">
+            <span className="rounded-full bg-gradient-to-r from-purple-500/10 via-fuchsia-500/10 to-cyan-500/10 px-2 py-0.5 text-[11px] font-medium text-purple-300 ring-1 ring-inset ring-purple-400/30">
               {friend.tagline}
             </span>
           </div>
@@ -139,7 +139,7 @@ export default function PostCard({
           <img
             src={post.imageUrl}
             alt="Posted image"
-            className="mt-3 max-h-96 w-full rounded-2xl border border-border object-cover shadow-sm"
+            className="mt-3 max-h-96 w-full rounded-[12px] border border-white/10 object-cover shadow-sm"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).style.display = "none"
             }}
@@ -283,7 +283,7 @@ export default function PostCard({
               <Button
                 onClick={handleReply}
                 disabled={!replyDraft.trim()}
-                className="gap-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-5 text-white shadow-sm transition-all hover:from-indigo-700 hover:to-fuchsia-700 active:scale-95"
+                className="gap-1.5 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-cyan-500 px-5 text-white shadow-sm transition-all hover:from-purple-500 hover:via-fuchsia-400 hover:to-cyan-400 active:scale-95"
               >
                 Reply
               </Button>

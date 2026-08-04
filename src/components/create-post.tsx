@@ -55,8 +55,8 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
   }
 
   return (
-    <Card className="group gap-0 p-0 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-glow hover:ring-indigo-500/25">
-      <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 opacity-80" />
+    <Card className="group gap-0 p-0 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-purple-400/40 hover:shadow-glow">
+      <div className="h-0.5 w-full bg-gradient-to-r from-purple-500 via-fuchsia-500 to-cyan-400 opacity-90" />
 
       <div
         className={cn(
@@ -92,7 +92,7 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
                 </p>
               )}
               {imagePreviewUrl ? (
-                <div className="overflow-hidden rounded-xl border border-border bg-background">
+                <div className="overflow-hidden rounded-[12px] border border-white/10 bg-background">
                   <img
                     src={imagePreviewUrl}
                     alt="Preview"
@@ -130,7 +130,7 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
               <Button
                 onClick={handlePost}
                 disabled={!canPost}
-                className="gap-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-5 text-white shadow-sm transition-all hover:from-indigo-700 hover:to-fuchsia-700 active:scale-95"
+                className="gap-1.5 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-cyan-500 px-5 text-white shadow-sm transition-all hover:from-purple-500 hover:via-fuchsia-400 hover:to-cyan-400 active:scale-95"
               >
                 <Send className="size-4" />
                 Post
@@ -158,7 +158,7 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
           <span className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
             What’s on your mind, {finalAuthor}?
           </span>
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all group-hover:from-indigo-700 group-hover:to-fuchsia-700 active:scale-95">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-cyan-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-all group-hover:from-purple-500 group-hover:via-fuchsia-400 group-hover:to-cyan-400 active:scale-95">
             <Plus className="size-4" />
             New Post
           </span>
