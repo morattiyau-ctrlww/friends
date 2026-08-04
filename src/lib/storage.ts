@@ -87,6 +87,23 @@ export async function deleteRemotePost(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function uploadPostImage(file: File): Promise<string> {
+  if (!supabase) {
+    throw new Error(
+      "Image upload is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    )
+  }
+  const filePath = `public/${Date.now()}_${file.name}`
+  const { error } = await supabase.storage
+    .from("post-images")
+    .upload(filePath, file)
+  if (error) {
+    throw new Error(`Upload failed: ${error.message}`)
+  }
+  const { data } = supabase.storage.from("post-images").getPublicUrl(filePath)
+  return data.publicUrl
+}
+
 function mapRemoteToLocal(row: RemotePost): Post {
   const replies = row.replies ?? []
   return {

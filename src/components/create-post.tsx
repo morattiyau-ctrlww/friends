@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { Plus, Send } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { ImagePlus, Loader2, Plus, Send, X } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -9,36 +9,28 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { getFriend, getInitials } from "@/lib/friends"
+import { uploadPostImage } from "@/lib/storage"
 import { cn } from "@/lib/utils"
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024
 
 type CreatePostProps = {
   currentUser: string
   onPost: (content: string, author: string, imageUrl?: string) => void
 }
 
-function isValidUrl(value: string) {
-  try {
-    new URL(value)
-    return true
-  } catch {
-    return false
-  }
-}
-
 export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
   const [open, setOpen] = useState(false)
   const [author, setAuthor] = useState(currentUser)
   const [content, setContent] = useState("")
-  const [imageUrl, setImageUrl] = useState("")
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const finalAuthor = author.trim() || currentUser
   const friend = getFriend(finalAuthor)
-  const imageUrlTrimmed = imageUrl.trim()
-  const imageUrlValid = imageUrlTrimmed === "" || isValidUrl(imageUrlTrimmed)
-  const canPost = content.trim().length > 0 && imageUrlValid
-  const imagePreviewUrl = useMemo(
-    () => (imageUrlValid && imageUrlTrimmed ? imageUrlTrimmed : undefined),
-    [imageUrlTrimmed, imageUrlValid]
-  )
+  const canPost = content.trim().length > 0 && !uploading
 
   useEffect(() => {
     if (!open) return
@@ -46,12 +38,62 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
     textarea?.focus()
   }, [open])
 
-  const handlePost = () => {
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
+
+  const clearImage = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPreviewUrl(null)
+    setSelectedFile(null)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setError(null)
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file.")
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      return
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setError("Image must be 5MB or smaller.")
+      if (fileInputRef.current) fileInputRef.current.value = ""
+      return
+    }
+    clearImage()
+    setSelectedFile(file)
+    setPreviewUrl(URL.createObjectURL(file))
+  }
+
+  const handlePost = async () => {
     if (!canPost) return
-    onPost(content.trim(), finalAuthor, imageUrlTrimmed || undefined)
-    setContent("")
-    setImageUrl("")
-    setOpen(false)
+    setUploading(true)
+    setError(null)
+    try {
+      let imageUrl: string | undefined
+      if (selectedFile) {
+        imageUrl = await uploadPostImage(selectedFile)
+      }
+      onPost(content.trim(), finalAuthor, imageUrl)
+      setContent("")
+      clearImage()
+      setOpen(false)
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while uploading the image. Please try again."
+      )
+    } finally {
+      setUploading(false)
+    }
   }
 
   return (
@@ -79,26 +121,52 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
                 className="h-8 max-w-[220px]"
                 aria-label="Author name"
               />
-              <Input
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="Photo URL (optional)"
-                className="h-8"
-                aria-label="Photo URL"
-              />
-              {!imageUrlValid && (
-                <p className="text-xs text-destructive">
-                  Enter a valid URL or leave this field blank.
-                </p>
-              )}
-              {imagePreviewUrl ? (
-                <div className="overflow-hidden rounded-[12px] border border-white/10 bg-background">
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  aria-label="Attach photo"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="gap-1.5 rounded-full text-muted-foreground transition-transform active:scale-95"
+                >
+                  <ImagePlus className="size-4" />
+                  Attach Photo
+                </Button>
+                {selectedFile ? (
+                  <span className="min-w-0 truncate text-xs text-muted-foreground">
+                    {selectedFile.name}
+                  </span>
+                ) : null}
+              </div>
+              {previewUrl ? (
+                <div className="relative overflow-hidden rounded-[12px] border border-white/10 bg-background">
                   <img
-                    src={imagePreviewUrl}
+                    src={previewUrl}
                     alt="Preview"
                     className="h-40 w-full object-cover"
                   />
+                  <button
+                    type="button"
+                    onClick={clearImage}
+                    disabled={uploading}
+                    aria-label="Remove image"
+                    className="absolute top-2 right-2 flex size-7 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-colors hover:bg-black/80"
+                  >
+                    <X className="size-4" />
+                  </button>
                 </div>
+              ) : null}
+              {error ? (
+                <p className="text-xs text-destructive">{error}</p>
               ) : null}
               <Textarea
                 id="create-post-textarea"
@@ -123,6 +191,7 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setOpen(false)}
+                disabled={uploading}
                 className="rounded-full px-4 font-medium text-muted-foreground transition-transform active:scale-95"
               >
                 Cancel
@@ -132,8 +201,17 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
                 disabled={!canPost}
                 className="gap-1.5 rounded-full bg-gradient-to-r from-purple-600 via-fuchsia-500 to-cyan-500 px-5 text-white shadow-sm transition-all hover:from-purple-500 hover:via-fuchsia-400 hover:to-cyan-400 active:scale-95"
               >
-                <Send className="size-4" />
-                Post
+                {uploading ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Uploading…
+                  </>
+                ) : (
+                  <>
+                    <Send className="size-4" />
+                    Post
+                  </>
+                )}
               </Button>
             </div>
           </div>
