@@ -27,7 +27,7 @@ export default function Header({ currentUser, users, onSwitchUser }: HeaderProps
     <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-14 w-full max-w-2xl items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <div className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
+          <div className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-fuchsia-600 text-white shadow-sm">
             <Users className="size-4" />
           </div>
           <span className="font-heading text-lg font-semibold tracking-tight">

@@ -46,8 +46,9 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
   }
 
   return (
-    <Card className="p-4">
-      <div className="flex gap-3">
+    <Card className="group gap-0 p-0 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-glow hover:ring-indigo-500/25">
+      <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 opacity-80" />
+      <div className="flex gap-3 p-4">
         <Avatar className="mt-1">
           <AvatarFallback className={`${friend.avatarColor} text-white`}>
             {getInitials(finalAuthor)}
@@ -95,14 +96,14 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
           />
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-between border-t pt-3">
-        <span className="text-xs text-muted-foreground">
+      <div className="mt-3 flex items-center justify-between gap-3 border-t px-4 py-3">
+        <span className="truncate text-xs text-muted-foreground">
           Posting as {finalAuthor}
         </span>
         <Button
           onClick={handlePost}
           disabled={!canPost}
-          className="gap-1.5 rounded-full px-5"
+          className="shrink-0 gap-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-fuchsia-600 px-5 text-white shadow-sm transition-all hover:from-indigo-700 hover:to-fuchsia-700 active:scale-95"
         >
           <Send className="size-4" />
           Post

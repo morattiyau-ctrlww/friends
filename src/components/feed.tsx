@@ -198,36 +198,48 @@ export default function Feed() {
   )
 
   return (
-    <div className="min-h-dvh bg-muted/60">
+    <div className="relative min-h-dvh overflow-x-hidden bg-aurora">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-gradient-to-b from-indigo-500/5 to-transparent"
+      />
       <Header currentUser={currentUser} users={users} onSwitchUser={handleSwitchUser} />
-      <main className="mx-auto w-full max-w-2xl space-y-4 px-4 py-6">
+      <main className="relative mx-auto w-full max-w-2xl space-y-4 px-4 py-6 pb-16">
         <CreatePost currentUser={currentUser} onPost={handleCreatePost} />
 
         {posts.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed py-16 text-center">
-            <MessageCircle className="size-8 text-muted-foreground" />
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-16 text-center animate-fade-up">
+            <div className="flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500/15 to-fuchsia-500/15 text-indigo-500 ring-1 ring-inset ring-indigo-500/20 dark:text-indigo-300">
+              <MessageCircle className="size-6" />
+            </div>
+            <p className="text-sm font-semibold">No posts yet.</p>
             <p className="text-sm text-muted-foreground">
-              No posts yet. Share the first update!
+              Share the first update with your friends!
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {posts.map((post) => (
-              <PostCard
+            {posts.map((post, index) => (
+              <div
                 key={post.id}
-                post={post}
-                isOwn={post.author === currentUser}
-                currentUser={currentUser}
-                onLike={() => handleLike(post.id)}
-                onDislike={() => handleDislike(post.id)}
-                onDelete={() => handleDeletePost(post.id)}
-                onUpdate={(content, imageUrl) =>
-                  handleUpdatePost(post.id, content, imageUrl)
-                }
-                onReply={(content, author) =>
-                  handleReply(post.id, content, author)
-                }
-              />
+                className="animate-fade-up"
+                style={{ animationDelay: `${Math.min(index, 10) * 60}ms` }}
+              >
+                <PostCard
+                  post={post}
+                  isOwn={post.author === currentUser}
+                  currentUser={currentUser}
+                  onLike={() => handleLike(post.id)}
+                  onDislike={() => handleDislike(post.id)}
+                  onDelete={() => handleDeletePost(post.id)}
+                  onUpdate={(content, imageUrl) =>
+                    handleUpdatePost(post.id, content, imageUrl)
+                  }
+                  onReply={(content, author) =>
+                    handleReply(post.id, content, author)
+                  }
+                />
+              </div>
             ))}
           </div>
         )}
