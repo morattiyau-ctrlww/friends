@@ -11,6 +11,7 @@
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-jakarta);
   --animate-fade-up: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-like-pulse: like-pulse 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   --shadow-glow: 0 24px 50px -20px oklch(0.7 0.24 290 / 0.5);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -142,6 +143,21 @@
   }
 }
 
+@keyframes like-pulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  45% {
+    transform: scale(0.9);
+    filter: brightness(1.45);
+  }
+  100% {
+    transform: scale(1.05);
+    filter: brightness(1.08);
+  }
+}
+
 @utility bg-aurora {
   background-color: var(--background);
   background-image:
@@ -152,6 +168,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up {
+    animation: none;
+  }
+  .animate-like-pulse {
     animation: none;
   }
 }

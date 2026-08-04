@@ -109,6 +109,7 @@ export default function PostCard({
 
   const liked = post.likedBy.includes(currentUser)
   const disliked = post.dislikedBy.includes(currentUser)
+  const likeLit = post.likes > 0
 
   const replyCount = post.replies.length
   const replyToggleLabel = repliesOpen
@@ -173,12 +174,12 @@ export default function PostCard({
           aria-label={liked ? "Unlike post" : "Like post"}
           aria-pressed={liked}
           className={cn(
-            "h-8 gap-1.5 px-4 active:scale-90",
-            liked &&
-              "border-[#a855f7] text-[#06b6d4] shadow-[inset_0_0_10px_rgba(59,130,246,0.5),0_0_18px_rgba(168,85,247,0.35)] hover:border-[#a855f7] hover:bg-[#0d1226] hover:text-[#06b6d4]"
+            "h-8 gap-1.5 px-4",
+            !likeLit &&
+              "border-[#ff4d4d]/30 bg-[#2a0d12] text-red-300/60 shadow-none hover:border-[#ff4d4d]/45 hover:bg-[#2a0d12] hover:text-red-200/85 hover:shadow-[0_0_12px_rgba(230,30,46,0.4)]"
           )}
         >
-          <Heart className="size-4" fill={liked ? "currentColor" : "none"} />
+          <Heart className="size-4" fill={likeLit ? "currentColor" : "none"} />
           <span className="text-xs font-semibold tabular-nums">{post.likes}</span>
         </Button>
         <Button
@@ -191,7 +192,7 @@ export default function PostCard({
           className={cn(
             "gap-1.5 active:scale-90",
             disliked &&
-              "border-transparent bg-[#dc2626] text-white hover:bg-[#dc2626] hover:text-white"
+              "border-red-400/50 bg-[#dc2626] text-white hover:bg-[#dc2626] hover:text-white"
           )}
         >
           <ThumbsDown className="size-4" />
