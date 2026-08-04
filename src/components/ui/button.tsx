@@ -18,8 +18,8 @@ const buttonVariants = cva(
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        like: "rounded-[20px] border border-[#ff4d4d] bg-gradient-to-b from-black/10 to-black/20 bg-[#e61e2e] text-white shadow-[0_0_15px_rgba(230,30,46,0.7)] transition-all hover:scale-[1.03] hover:shadow-[0_0_22px_rgba(230,30,46,0.9)] active:animate-like-pulse",
-        dislike: "rounded-[20px] border border-red-500/35 bg-transparent text-red-400/85 hover:bg-red-500/10 hover:text-red-400",
+        like: "rounded-[20px] border border-white/10 bg-[rgba(20,15,25,0.6)] text-[#a193a0] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-[1px] hover:border-[#ff2a5f]/60 hover:text-[#ff3366] hover:shadow-[0_0_10px_rgba(255,42,95,0.25)] active:animate-like-pulse",
+        dislike: "rounded-[20px] border border-[rgba(180,40,60,0.3)] bg-[rgba(20,15,25,0.6)] text-[#71717a] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-[1px] hover:border-[rgba(220,70,90,0.5)] hover:text-[#8a8a95] hover:shadow-[0_0_8px_rgba(180,40,60,0.2)]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

@@ -109,7 +109,6 @@ export default function PostCard({
 
   const liked = post.likedBy.includes(currentUser)
   const disliked = post.dislikedBy.includes(currentUser)
-  const likeLit = post.likes > 0
 
   const replyCount = post.replies.length
   const replyToggleLabel = repliesOpen
@@ -175,11 +174,11 @@ export default function PostCard({
           aria-pressed={liked}
           className={cn(
             "h-8 gap-1.5 px-4",
-            !likeLit &&
-              "border-[#ff4d4d]/30 bg-[#2a0d12] text-red-300/60 shadow-none hover:border-[#ff4d4d]/45 hover:bg-[#2a0d12] hover:text-red-200/85 hover:shadow-[0_0_12px_rgba(230,30,46,0.4)]"
+            liked &&
+              "border-[#ff2a5f] text-[#ff3366] shadow-[0_0_12px_rgba(255,42,95,0.4),inset_0_0_8px_rgba(255,42,95,0.2)] [text-shadow:0_0_6px_rgba(255,51,102,0.6)] hover:border-[#ff2a5f] hover:text-[#ff3366] hover:shadow-[0_0_16px_rgba(255,42,95,0.55),inset_0_0_10px_rgba(255,42,95,0.25)] hover:[text-shadow:0_0_8px_rgba(255,51,102,0.7)]"
           )}
         >
-          <Heart className="size-4" fill={likeLit ? "currentColor" : "none"} />
+          <Heart className="size-4" fill={liked ? "currentColor" : "none"} />
           <span className="text-xs font-semibold tabular-nums">{post.likes}</span>
         </Button>
         <Button
@@ -190,9 +189,9 @@ export default function PostCard({
           aria-pressed={disliked}
           title="Dislike post"
           className={cn(
-            "gap-1.5 active:scale-90",
+            "gap-1.5 active:scale-95",
             disliked &&
-              "border-red-400/50 bg-[#dc2626] text-white hover:bg-[#dc2626] hover:text-white"
+              "border-[rgba(230,70,90,0.65)] text-[#ff8fa0] shadow-[0_0_10px_rgba(220,60,80,0.3),inset_0_0_6px_rgba(220,60,80,0.15)] hover:border-[rgba(230,70,90,0.75)] hover:text-[#ff8fa0] hover:shadow-[0_0_14px_rgba(220,60,80,0.4),inset_0_0_8px_rgba(220,60,80,0.2)]"
           )}
         >
           <ThumbsDown className="size-4" />
