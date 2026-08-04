@@ -56,6 +56,7 @@ export default function Feed() {
         likes: 0,
         dislikes: 0,
         likedBy: [],
+        dislikedBy: [],
         comments: 0,
         replies: [],
         imageUrl,
@@ -105,9 +106,27 @@ export default function Feed() {
 
   const handleLike = useCallback(
     (id: string) => {
-      const next = posts.map((post) =>
-        post.id === id ? { ...post, likes: post.likes + 1 } : post
-      )
+      const next = posts.map((post) => {
+        if (post.id !== id) return post
+        const liked = post.likedBy.includes(currentUser)
+        const disliked = post.dislikedBy.includes(currentUser)
+        let likedBy = post.likedBy
+        let dislikedBy = post.dislikedBy
+        let likes = post.likes
+        let dislikes = post.dislikes
+        if (liked) {
+          likedBy = likedBy.filter((user) => user !== currentUser)
+          likes = Math.max(0, likes - 1)
+        } else {
+          if (disliked) {
+            dislikedBy = dislikedBy.filter((user) => user !== currentUser)
+            dislikes = Math.max(0, dislikes - 1)
+          }
+          likedBy = [...likedBy, currentUser]
+          likes = likes + 1
+        }
+        return { ...post, likedBy, dislikedBy, likes, dislikes }
+      })
       const updated = next.find((post) => post.id === id)
       setPosts(next)
       saveLocalPosts(next)
@@ -117,14 +136,32 @@ export default function Feed() {
         )
       }
     },
-    [posts]
+    [posts, currentUser]
   )
 
   const handleDislike = useCallback(
     (id: string) => {
-      const next = posts.map((post) =>
-        post.id === id ? { ...post, dislikes: post.dislikes + 1 } : post
-      )
+      const next = posts.map((post) => {
+        if (post.id !== id) return post
+        const liked = post.likedBy.includes(currentUser)
+        const disliked = post.dislikedBy.includes(currentUser)
+        let likedBy = post.likedBy
+        let dislikedBy = post.dislikedBy
+        let likes = post.likes
+        let dislikes = post.dislikes
+        if (disliked) {
+          dislikedBy = dislikedBy.filter((user) => user !== currentUser)
+          dislikes = Math.max(0, dislikes - 1)
+        } else {
+          if (liked) {
+            likedBy = likedBy.filter((user) => user !== currentUser)
+            likes = Math.max(0, likes - 1)
+          }
+          dislikedBy = [...dislikedBy, currentUser]
+          dislikes = dislikes + 1
+        }
+        return { ...post, likedBy, dislikedBy, likes, dislikes }
+      })
       const updated = next.find((post) => post.id === id)
       setPosts(next)
       saveLocalPosts(next)
@@ -134,7 +171,7 @@ export default function Feed() {
         )
       }
     },
-    [posts]
+    [posts, currentUser]
   )
 
   const handleReply = useCallback(

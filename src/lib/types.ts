@@ -13,6 +13,7 @@ export type Post = {
   likes: number
   dislikes: number
   likedBy: string[]
+  dislikedBy: string[]
   comments: number
   replies: Reply[]
   imageUrl?: string

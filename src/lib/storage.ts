@@ -13,6 +13,7 @@ type RemotePost = {
   likes: number | null
   dislikes: number | null
   liked_by: string[] | null
+  disliked_by: string[] | null
   comments: number | null
   image_url: string | null
   replies: Reply[] | null
@@ -27,6 +28,8 @@ export function loadLocalPosts(): Post[] {
     if (!Array.isArray(parsed)) return []
     return (parsed as Post[]).map((post) => ({
       ...post,
+      likedBy: post.likedBy ?? [],
+      dislikedBy: post.dislikedBy ?? [],
       replies: post.replies ?? [],
       comments: post.comments ?? post.replies?.length ?? 0,
       imageUrl: post.imageUrl ?? undefined,
@@ -114,6 +117,7 @@ function mapRemoteToLocal(row: RemotePost): Post {
     likes: row.likes ?? 0,
     dislikes: row.dislikes ?? 0,
     likedBy: row.liked_by ?? [],
+    dislikedBy: row.disliked_by ?? [],
     replies,
     comments: row.comments ?? replies.length,
     imageUrl: row.image_url ?? undefined,
@@ -129,6 +133,7 @@ function mapLocalToRemote(post: Post) {
     likes: post.likes,
     dislikes: post.dislikes,
     liked_by: post.likedBy,
+    disliked_by: post.dislikedBy,
     comments: post.replies.length,
     image_url: post.imageUrl ?? null,
     replies: post.replies,

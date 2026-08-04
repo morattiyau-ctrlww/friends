@@ -9,6 +9,7 @@ create table if not exists public.posts (
   likes integer not null default 0,
   dislikes integer not null default 0,
   liked_by text[] not null default '{}',
+  disliked_by text[] not null default '{}',
   comments integer not null default 0,
   image_url text,
   replies jsonb not null default '[]'
@@ -28,6 +29,7 @@ create policy "posts_delete_policy" on public.posts for delete using (true);
 
 -- Migration for existing installs
 alter table public.posts add column if not exists dislikes integer not null default 0;
+alter table public.posts add column if not exists disliked_by text[] not null default '{}';
 alter table public.posts add column if not exists image_url text;
 alter table public.posts add column if not exists replies jsonb not null default '[]';
 

@@ -107,6 +107,9 @@ export default function PostCard({
     else onDislike()
   }
 
+  const liked = post.likedBy.includes(currentUser)
+  const disliked = post.dislikedBy.includes(currentUser)
+
   const replyCount = post.replies.length
   const replyToggleLabel = repliesOpen
     ? replyCount > 0
@@ -164,22 +167,32 @@ export default function PostCard({
 
       <div className="mt-3 flex items-center gap-1 px-4 py-2.5">
         <Button
-          variant="ghost"
+          variant="like"
           size="sm"
           onClick={(e) => handleReaction(e, "like")}
-          className="gap-1.5 rounded-full transition-transform active:scale-90"
-          aria-label="Like post"
+          aria-label={liked ? "Unlike post" : "Like post"}
+          aria-pressed={liked}
+          className={cn(
+            "h-8 gap-1.5 px-4 active:scale-90",
+            liked &&
+              "border-[#a855f7] text-[#06b6d4] shadow-[inset_0_0_10px_rgba(59,130,246,0.5),0_0_18px_rgba(168,85,247,0.35)] hover:border-[#a855f7] hover:bg-[#0d1226] hover:text-[#06b6d4]"
+          )}
         >
-          <Heart className="size-4" />
-          <span className="text-xs font-medium tabular-nums">{post.likes}</span>
+          <Heart className="size-4" fill={liked ? "currentColor" : "none"} />
+          <span className="text-xs font-semibold tabular-nums">{post.likes}</span>
         </Button>
         <Button
-          variant="ghost"
+          variant="dislike"
           size="sm"
           onClick={(e) => handleReaction(e, "dislike")}
-          className="gap-1.5 rounded-full border border-destructive/20 bg-destructive/5 text-destructive transition-transform hover:bg-destructive/10 active:scale-90"
-          aria-label="Dislike post"
+          aria-label={disliked ? "Undo dislike" : "Dislike post"}
+          aria-pressed={disliked}
           title="Dislike post"
+          className={cn(
+            "gap-1.5 active:scale-90",
+            disliked &&
+              "border-transparent bg-[#dc2626] text-white hover:bg-[#dc2626] hover:text-white"
+          )}
         >
           <ThumbsDown className="size-4" />
           <span className="text-xs font-medium tabular-nums">
