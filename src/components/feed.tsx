@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { MessageCircle } from "lucide-react"
 
 import CreatePost from "@/components/create-post"
+import BackgroundCanvas from "@/components/background-canvas"
 import Header from "@/components/header"
 import PostCard from "@/components/post-card"
 import { FRIENDS } from "@/lib/friends"
@@ -198,11 +199,8 @@ export default function Feed() {
   )
 
   return (
-    <div className="relative min-h-dvh overflow-x-hidden bg-aurora">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-gradient-to-b from-indigo-500/5 to-transparent"
-      />
+    <div className="relative z-0 min-h-dvh overflow-x-hidden bg-aurora">
+      <BackgroundCanvas />
       <Header currentUser={currentUser} users={users} onSwitchUser={handleSwitchUser} />
       <main className="relative mx-auto w-full max-w-2xl space-y-4 px-4 py-6 pb-16">
         <CreatePost currentUser={currentUser} onPost={handleCreatePost} />

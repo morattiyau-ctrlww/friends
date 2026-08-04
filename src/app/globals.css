@@ -149,3 +149,9 @@
     radial-gradient(45rem 28rem at 95% 5%, oklch(0.7 0.14 240 / 0.12), transparent 60%),
     radial-gradient(50rem 30rem at 50% 110%, oklch(0.75 0.12 330 / 0.1), transparent 60%);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none;
+  }
+}
