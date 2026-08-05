@@ -1,7 +1,6 @@
 import { supabase } from "./supabase"
 import type { Post, Reply } from "./types"
 
-const POSTS_KEY = "friend-feed:posts:v2"
 const CURRENT_USER_KEY = "friend-feed:current-user"
 const EXTRA_USERS_KEY = "friend-feed:extra-users:v1"
 
@@ -17,31 +16,6 @@ type RemotePost = {
   comments: number | null
   image_url: string | null
   replies: Reply[] | null
-}
-
-export function loadLocalPosts(): Post[] {
-  if (typeof window === "undefined") return []
-  try {
-    const raw = window.localStorage.getItem(POSTS_KEY)
-    if (!raw) return []
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return []
-    return (parsed as Post[]).map((post) => ({
-      ...post,
-      likedBy: post.likedBy ?? [],
-      dislikedBy: post.dislikedBy ?? [],
-      replies: post.replies ?? [],
-      comments: post.comments ?? post.replies?.length ?? 0,
-      imageUrl: post.imageUrl ?? undefined,
-    }))
-  } catch {
-    return []
-  }
-}
-
-export function saveLocalPosts(posts: Post[]): void {
-  if (typeof window === "undefined") return
-  window.localStorage.setItem(POSTS_KEY, JSON.stringify(posts))
 }
 
 export function loadCurrentUser(): string {
@@ -73,19 +47,45 @@ export function saveExtraUsers(users: string[]): void {
 
 export async function fetchRemotePosts(): Promise<Post[]> {
   if (!supabase) return []
-  const { data, error } = await supabase.from("posts").select("*")
+  const { data, error } = await supabase
+    .from("posts")
+    .select("*")
+    .order("created_at", { ascending: false })
   if (error) throw error
   return (data as RemotePost[] | null ?? []).map(mapRemoteToLocal)
 }
 
+export async function insertRemotePost(post: Post): Promise<Post> {
+  if (!supabase) {
+    throw new Error(
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    )
+  }
+  const { data, error } = await supabase
+    .from("posts")
+    .insert(mapLocalToRemote(post))
+    .select()
+    .single()
+  if (error) throw error
+  return mapRemoteToLocal(data as RemotePost)
+}
+
 export async function upsertRemotePost(post: Post): Promise<void> {
-  if (!supabase) return
+  if (!supabase) {
+    throw new Error(
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    )
+  }
   const { error } = await supabase.from("posts").upsert(mapLocalToRemote(post))
   if (error) throw error
 }
 
 export async function deleteRemotePost(id: string): Promise<void> {
-  if (!supabase) return
+  if (!supabase) {
+    throw new Error(
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+    )
+  }
   const { error } = await supabase.from("posts").delete().eq("id", id)
   if (error) throw error
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { MessageCircle } from "lucide-react"
+import { Loader2, MessageCircle } from "lucide-react"
 
 import CreatePost from "@/components/create-post"
 import BackgroundCanvas from "@/components/background-canvas"
@@ -11,43 +11,41 @@ import { FRIENDS } from "@/lib/friends"
 import {
   deleteRemotePost,
   fetchRemotePosts,
+  insertRemotePost,
   loadCurrentUser,
   loadExtraUsers,
-  loadLocalPosts,
   saveCurrentUser,
   saveExtraUsers,
-  saveLocalPosts,
   upsertRemotePost,
 } from "@/lib/storage"
 import type { Post } from "@/lib/types"
 
 export default function Feed() {
   const [currentUser, setCurrentUser] = useState<string>(() => loadCurrentUser())
-  const [posts, setPosts] = useState<Post[]>(() => loadLocalPosts())
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
   const [extraUsers, setExtraUsers] = useState<string[]>(() => loadExtraUsers())
 
   useEffect(() => {
+    let cancelled = false
     fetchRemotePosts()
       .then((remote) => {
-        setPosts((prev) => {
-          const remoteIds = new Set(remote.map((post) => post.id))
-          const localOnly = prev.filter((post) => !remoteIds.has(post.id))
-          for (const post of localOnly) {
-            upsertRemotePost(post).catch(() => {})
-          }
-          const merged = [...remote, ...localOnly]
-          merged.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-          saveLocalPosts(merged)
-          return merged
-        })
+        if (cancelled) return
+        setPosts(remote)
       })
       .catch((error) => {
         console.error("Supabase sync unavailable:", error)
       })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const handleCreatePost = useCallback(
-    (content: string, author: string, imageUrl?: string) => {
+    async (content: string, author: string, imageUrl?: string) => {
       const post: Post = {
         id: crypto.randomUUID(),
         author,
@@ -61,14 +59,13 @@ export default function Feed() {
         replies: [],
         imageUrl,
       }
-      setPosts((prev) => {
-        const next = [post, ...prev]
-        saveLocalPosts(next)
-        return next
-      })
-      upsertRemotePost(post).catch((error) =>
+      try {
+        const created = await insertRemotePost(post)
+        setPosts((prev) => [created, ...prev])
+      } catch (error) {
         console.error("Supabase write failed:", error)
-      )
+        return
+      }
       if (!FRIENDS.some((friend) => friend.name === author)) {
         setExtraUsers((prev) => {
           if (prev.includes(author)) return prev
@@ -86,120 +83,106 @@ export default function Feed() {
   )
 
   const handleUpdatePost = useCallback(
-    (id: string, content: string, imageUrl?: string) => {
-      const next = posts.map((post) =>
-        post.id === id
-          ? { ...post, content, imageUrl: imageUrl || undefined }
-          : post
-      )
-      const updated = next.find((post) => post.id === id)
-      setPosts(next)
-      saveLocalPosts(next)
-      if (updated) {
-        upsertRemotePost(updated).catch((error) =>
-          console.error("Supabase write failed:", error)
-        )
+    async (id: string, content: string, imageUrl?: string) => {
+      const current = posts.find((post) => post.id === id)
+      if (!current) return
+      const updated: Post = { ...current, content, imageUrl: imageUrl || undefined }
+      try {
+        await upsertRemotePost(updated)
+        setPosts((prev) => prev.map((post) => (post.id === id ? updated : post)))
+      } catch (error) {
+        console.error("Supabase write failed:", error)
       }
     },
     [posts]
   )
 
   const handleLike = useCallback(
-    (id: string) => {
-      const next = posts.map((post) => {
-        if (post.id !== id) return post
-        const liked = post.likedBy.includes(currentUser)
-        const disliked = post.dislikedBy.includes(currentUser)
-        let likedBy = post.likedBy
-        let dislikedBy = post.dislikedBy
-        let likes = post.likes
-        let dislikes = post.dislikes
-        if (liked) {
-          likedBy = likedBy.filter((user) => user !== currentUser)
-          likes = Math.max(0, likes - 1)
-        } else {
-          if (disliked) {
-            dislikedBy = dislikedBy.filter((user) => user !== currentUser)
-            dislikes = Math.max(0, dislikes - 1)
-          }
-          likedBy = [...likedBy, currentUser]
-          likes = likes + 1
+    async (id: string) => {
+      const current = posts.find((post) => post.id === id)
+      if (!current) return
+      const liked = current.likedBy.includes(currentUser)
+      const disliked = current.dislikedBy.includes(currentUser)
+      let likedBy = current.likedBy
+      let dislikedBy = current.dislikedBy
+      let likes = current.likes
+      let dislikes = current.dislikes
+      if (liked) {
+        likedBy = likedBy.filter((user) => user !== currentUser)
+        likes = Math.max(0, likes - 1)
+      } else {
+        if (disliked) {
+          dislikedBy = dislikedBy.filter((user) => user !== currentUser)
+          dislikes = Math.max(0, dislikes - 1)
         }
-        return { ...post, likedBy, dislikedBy, likes, dislikes }
-      })
-      const updated = next.find((post) => post.id === id)
-      setPosts(next)
-      saveLocalPosts(next)
-      if (updated) {
-        upsertRemotePost(updated).catch((error) =>
-          console.error("Supabase write failed:", error)
-        )
+        likedBy = [...likedBy, currentUser]
+        likes = likes + 1
+      }
+      const updated: Post = { ...current, likedBy, dislikedBy, likes, dislikes }
+      try {
+        await upsertRemotePost(updated)
+        setPosts((prev) => prev.map((post) => (post.id === id ? updated : post)))
+      } catch (error) {
+        console.error("Supabase write failed:", error)
       }
     },
     [posts, currentUser]
   )
 
   const handleDislike = useCallback(
-    (id: string) => {
-      const next = posts.map((post) => {
-        if (post.id !== id) return post
-        const liked = post.likedBy.includes(currentUser)
-        const disliked = post.dislikedBy.includes(currentUser)
-        let likedBy = post.likedBy
-        let dislikedBy = post.dislikedBy
-        let likes = post.likes
-        let dislikes = post.dislikes
-        if (disliked) {
-          dislikedBy = dislikedBy.filter((user) => user !== currentUser)
-          dislikes = Math.max(0, dislikes - 1)
-        } else {
-          if (liked) {
-            likedBy = likedBy.filter((user) => user !== currentUser)
-            likes = Math.max(0, likes - 1)
-          }
-          dislikedBy = [...dislikedBy, currentUser]
-          dislikes = dislikes + 1
+    async (id: string) => {
+      const current = posts.find((post) => post.id === id)
+      if (!current) return
+      const liked = current.likedBy.includes(currentUser)
+      const disliked = current.dislikedBy.includes(currentUser)
+      let likedBy = current.likedBy
+      let dislikedBy = current.dislikedBy
+      let likes = current.likes
+      let dislikes = current.dislikes
+      if (disliked) {
+        dislikedBy = dislikedBy.filter((user) => user !== currentUser)
+        dislikes = Math.max(0, dislikes - 1)
+      } else {
+        if (liked) {
+          likedBy = likedBy.filter((user) => user !== currentUser)
+          likes = Math.max(0, likes - 1)
         }
-        return { ...post, likedBy, dislikedBy, likes, dislikes }
-      })
-      const updated = next.find((post) => post.id === id)
-      setPosts(next)
-      saveLocalPosts(next)
-      if (updated) {
-        upsertRemotePost(updated).catch((error) =>
-          console.error("Supabase write failed:", error)
-        )
+        dislikedBy = [...dislikedBy, currentUser]
+        dislikes = dislikes + 1
+      }
+      const updated: Post = { ...current, likedBy, dislikedBy, likes, dislikes }
+      try {
+        await upsertRemotePost(updated)
+        setPosts((prev) => prev.map((post) => (post.id === id ? updated : post)))
+      } catch (error) {
+        console.error("Supabase write failed:", error)
       }
     },
     [posts, currentUser]
   )
 
   const handleReply = useCallback(
-    (id: string, content: string, author: string) => {
-      const next = posts.map((post) =>
-        post.id === id
-          ? {
-              ...post,
-              replies: [
-                ...post.replies,
-                {
-                  id: crypto.randomUUID(),
-                  author,
-                  content,
-                  createdAt: new Date().toISOString(),
-                },
-              ],
-              comments: post.comments + 1,
-            }
-          : post
-      )
-      const updated = next.find((post) => post.id === id)
-      setPosts(next)
-      saveLocalPosts(next)
-      if (updated) {
-        upsertRemotePost(updated).catch((error) =>
-          console.error("Supabase write failed:", error)
-        )
+    async (id: string, content: string, author: string) => {
+      const current = posts.find((post) => post.id === id)
+      if (!current) return
+      const updated: Post = {
+        ...current,
+        replies: [
+          ...current.replies,
+          {
+            id: crypto.randomUUID(),
+            author,
+            content,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+        comments: current.comments + 1,
+      }
+      try {
+        await upsertRemotePost(updated)
+        setPosts((prev) => prev.map((post) => (post.id === id ? updated : post)))
+      } catch (error) {
+        console.error("Supabase write failed:", error)
       }
       if (!FRIENDS.some((friend) => friend.name === author)) {
         setExtraUsers((prev) => {
@@ -213,17 +196,14 @@ export default function Feed() {
     [posts]
   )
 
-  const handleDeletePost = useCallback(
-    (id: string) => {
-      const next = posts.filter((post) => post.id !== id)
-      setPosts(next)
-      saveLocalPosts(next)
-      deleteRemotePost(id).catch((error) =>
-        console.error("Supabase delete failed:", error)
-      )
-    },
-    [posts]
-  )
+  const handleDeletePost = useCallback(async (id: string) => {
+    try {
+      await deleteRemotePost(id)
+      setPosts((prev) => prev.filter((post) => post.id !== id))
+    } catch (error) {
+      console.error("Supabase delete failed:", error)
+    }
+  }, [])
 
   const handleSwitchUser = useCallback((name: string) => {
     setCurrentUser(name)
@@ -242,7 +222,12 @@ export default function Feed() {
       <main className="relative mx-auto w-full max-w-2xl space-y-4 px-4 py-6 pb-16">
         <CreatePost currentUser={currentUser} onPost={handleCreatePost} />
 
-        {posts.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-16 text-center animate-fade-up">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Loading feed…</p>
+          </div>
+        ) : posts.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-16 text-center animate-fade-up">
             <div className="flex size-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 text-purple-400 ring-1 ring-inset ring-purple-400/30">
               <MessageCircle className="size-6" />
