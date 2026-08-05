@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import AutoExpandingTextarea from "@/components/auto-expanding-textarea"
 import { formatRelativeTime } from "@/lib/format-time"
 import { getFriend, getInitials } from "@/lib/friends"
 import { emitReaction } from "@/lib/reactions"
@@ -297,11 +297,11 @@ export default function PostCard({
                 className="h-8"
                 aria-label="Reply author name"
               />
-              <Textarea
+              <AutoExpandingTextarea
                 value={replyDraft}
                 onChange={(e) => setReplyDraft(e.target.value)}
                 placeholder="Write a reply…"
-                className="min-h-20 resize-none"
+                minRows={2}
                 onKeyDown={(e) => {
                   if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
                     handleReply()
@@ -341,10 +341,10 @@ export default function PostCard({
                 Enter a valid URL or leave this field blank.
               </p>
             )}
-            <Textarea
+            <AutoExpandingTextarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              className="min-h-28 resize-none"
+              minRows={4}
             />
           </div>
           <DialogFooter>

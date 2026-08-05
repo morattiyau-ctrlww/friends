@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import AutoExpandingTextarea from "@/components/auto-expanding-textarea"
 import { getFriend, getInitials } from "@/lib/friends"
 import { uploadPostImage } from "@/lib/storage"
 import { cn } from "@/lib/utils"
@@ -168,12 +168,12 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
               {error ? (
                 <p className="text-xs text-destructive">{error}</p>
               ) : null}
-              <Textarea
+              <AutoExpandingTextarea
                 id="create-post-textarea"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="What's happening?"
-                className="min-h-20 resize-none"
+                minRows={3}
                 onKeyDown={(e) => {
                   if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
                     handlePost()
