@@ -16,7 +16,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024
 
 type CreatePostProps = {
   currentUser: string
-  onPost: (content: string, author: string, imageUrl?: string) => void
+  onPost: (content: string, author: string, imageUrl?: string) => Promise<void>
 }
 
 export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
@@ -81,7 +81,7 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
       if (selectedFile) {
         imageUrl = await uploadPostImage(selectedFile)
       }
-      onPost(content.trim(), finalAuthor, imageUrl)
+      await onPost(content.trim(), finalAuthor, imageUrl)
       setContent("")
       clearImage()
       setOpen(false)
@@ -89,7 +89,7 @@ export default function CreatePost({ currentUser, onPost }: CreatePostProps) {
       setError(
         err instanceof Error
           ? err.message
-          : "Something went wrong while uploading the image. Please try again."
+          : "Something went wrong while saving your post. Please try again."
       )
     } finally {
       setUploading(false)

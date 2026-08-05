@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Loader2, MessageCircle } from "lucide-react"
+import { Loader2, MessageCircle, X } from "lucide-react"
 
 import CreatePost from "@/components/create-post"
 import BackgroundCanvas from "@/components/background-canvas"
@@ -24,6 +24,7 @@ export default function Feed() {
   const [currentUser, setCurrentUser] = useState<string>(() => loadCurrentUser())
   const [posts, setPosts] = useState<Post[]>([])
   const [loading, setLoading] = useState(true)
+  const [syncError, setSyncError] = useState<string | null>(null)
   const [extraUsers, setExtraUsers] = useState<string[]>(() => loadExtraUsers())
 
   useEffect(() => {
@@ -35,6 +36,9 @@ export default function Feed() {
       })
       .catch((error) => {
         console.error("Supabase sync unavailable:", error)
+        if (!cancelled) {
+          setSyncError("Couldn't load posts from the database. Check your connection and refresh.")
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -42,6 +46,15 @@ export default function Feed() {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  const reportSyncError = useCallback((error: unknown) => {
+    console.error("Supabase write failed:", error)
+    setSyncError(
+      error instanceof Error
+        ? error.message
+        : "Something went wrong while syncing with the database."
+    )
   }, [])
 
   const handleCreatePost = useCallback(
@@ -59,13 +72,8 @@ export default function Feed() {
         replies: [],
         imageUrl,
       }
-      try {
-        const created = await insertRemotePost(post)
-        setPosts((prev) => [created, ...prev])
-      } catch (error) {
-        console.error("Supabase write failed:", error)
-        return
-      }
+      const created = await insertRemotePost(post)
+      setPosts((prev) => [created, ...prev])
       if (!FRIENDS.some((friend) => friend.name === author)) {
         setExtraUsers((prev) => {
           if (prev.includes(author)) return prev
@@ -91,10 +99,10 @@ export default function Feed() {
         await upsertRemotePost(updated)
         setPosts((prev) => prev.map((post) => (post.id === id ? updated : post)))
       } catch (error) {
-        console.error("Supabase write failed:", error)
+        reportSyncError(error)
       }
     },
-    [posts]
+    [posts, reportSyncError]
   )
 
   const handleLike = useCallback(
@@ -123,10 +131,10 @@ export default function Feed() {
         await upsertRemotePost(updated)
         setPosts((prev) => prev.map((post) => (post.id === id ? updated : post)))
       } catch (error) {
-        console.error("Supabase write failed:", error)
+        reportSyncError(error)
       }
     },
-    [posts, currentUser]
+    [posts, currentUser, reportSyncError]
   )
 
   const handleDislike = useCallback(
@@ -155,10 +163,10 @@ export default function Feed() {
         await upsertRemotePost(updated)
         setPosts((prev) => prev.map((post) => (post.id === id ? updated : post)))
       } catch (error) {
-        console.error("Supabase write failed:", error)
+        reportSyncError(error)
       }
     },
-    [posts, currentUser]
+    [posts, currentUser, reportSyncError]
   )
 
   const handleReply = useCallback(
@@ -182,7 +190,7 @@ export default function Feed() {
         await upsertRemotePost(updated)
         setPosts((prev) => prev.map((post) => (post.id === id ? updated : post)))
       } catch (error) {
-        console.error("Supabase write failed:", error)
+        reportSyncError(error)
       }
       if (!FRIENDS.some((friend) => friend.name === author)) {
         setExtraUsers((prev) => {
@@ -193,17 +201,20 @@ export default function Feed() {
         })
       }
     },
-    [posts]
+    [posts, reportSyncError]
   )
 
-  const handleDeletePost = useCallback(async (id: string) => {
-    try {
-      await deleteRemotePost(id)
-      setPosts((prev) => prev.filter((post) => post.id !== id))
-    } catch (error) {
-      console.error("Supabase delete failed:", error)
-    }
-  }, [])
+  const handleDeletePost = useCallback(
+    async (id: string) => {
+      try {
+        await deleteRemotePost(id)
+        setPosts((prev) => prev.filter((post) => post.id !== id))
+      } catch (error) {
+        reportSyncError(error)
+      }
+    },
+    [reportSyncError]
+  )
 
   const handleSwitchUser = useCallback((name: string) => {
     setCurrentUser(name)
@@ -220,6 +231,21 @@ export default function Feed() {
       <BackgroundCanvas />
       <Header currentUser={currentUser} users={users} onSwitchUser={handleSwitchUser} />
       <main className="relative mx-auto w-full max-w-2xl space-y-4 px-4 py-6 pb-16">
+        {syncError ? (
+          <div className="flex items-center justify-between gap-3 rounded-2xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive animate-fade-up">
+            <p className="min-w-0">
+              Couldn&apos;t sync with the database: {syncError}
+            </p>
+            <button
+              type="button"
+              onClick={() => setSyncError(null)}
+              aria-label="Dismiss error"
+              className="flex shrink-0 items-center justify-center rounded-full p-1 transition-colors hover:bg-destructive/15"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        ) : null}
         <CreatePost currentUser={currentUser} onPost={handleCreatePost} />
 
         {loading ? (
