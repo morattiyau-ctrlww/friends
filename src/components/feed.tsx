@@ -1,12 +1,13 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Loader2, MessageCircle, X } from "lucide-react"
+import { MessageCircle, X } from "lucide-react"
 
 import CreatePost from "@/components/create-post"
 import BackgroundCanvas from "@/components/background-canvas"
 import Header from "@/components/header"
 import PostCard from "@/components/post-card"
+import PostCardSkeleton from "@/components/post-card-skeleton"
 import { FRIENDS } from "@/lib/friends"
 import {
   deleteRemotePost,
@@ -249,9 +250,17 @@ export default function Feed() {
         <CreatePost currentUser={currentUser} onPost={handleCreatePost} />
 
         {loading ? (
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-16 text-center animate-fade-up">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Loading feed…</p>
+          <div className="space-y-4" role="status" aria-label="Loading posts">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div
+                key={index}
+                className="animate-fade-up"
+                style={{ animationDelay: `${Math.min(index, 10) * 60}ms` }}
+              >
+                <PostCardSkeleton />
+              </div>
+            ))}
+            <span className="sr-only">Loading posts…</span>
           </div>
         ) : posts.length === 0 ? (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed px-6 py-16 text-center animate-fade-up">
